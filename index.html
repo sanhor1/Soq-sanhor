@@ -13,6 +13,12 @@
             margin: 0;
             padding: 0;
         }
+        h1 { margin-top: 10px; }
+        .logo {
+            width: 250px;
+            margin: 10px auto;
+            display: block;
+        }
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -27,14 +33,45 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             color: black;
+            perspective: 1000px;
             position: relative;
             height: 400px;
+            overflow: hidden;
+        }
+        .product-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .product-card.flipped .product-inner {
+            transform: rotateY(180deg);
+        }
+        .product-front, .product-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .product-front img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 10px;
+        }
+        .product-back {
+            background: #007bff;
+            color: white;
+            transform: rotateY(180deg);
+            flex-direction: column;
         }
         .product-info { 
             display: flex; 
@@ -49,6 +86,18 @@
             width: 100%;
             text-align: center;
         }
+        .product-info .price-box, 
+        .product-info button {
+            flex: 1;
+            text-align: center;
+        }
+        .price-box {
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
         .cart { 
             position: fixed; 
             top: 0; 
@@ -56,11 +105,28 @@
             width: 300px; 
             height: 100vh; 
             background: linear-gradient(to bottom, #FF4500, #FFC300); 
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1); 
             padding: 20px; 
             transition: 0.3s;
             color: white;
         }
         .cart.open { right: 0; }
+        .cart-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 9999;
+        }
+        .cart-button:hover {
+            background: #0056b3;
+        }
         button { 
             padding: 8px 12px; 
             border: none; 
@@ -68,34 +134,52 @@
             color: white; 
             border-radius: 5px; 
             cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
         }
     </style>
 </head>
 <body>
 
+    <img src="logo.png" alt="شعار سوق سنهور المدينة" class="logo">
     <h1>مرحبًا بك في سوق سنهور المدينة</h1>
 
     <button class="cart-button" onclick="toggleCart()">🛒</button>
 
     <div class="container">
-        <div class="product-card">
-            <div class="product-front">
-                <img src="product.jpg" alt="منتج 1">
+        <div class="product-card" onclick="flipImage(this)">
+            <div class="product-inner">
+                <div class="product-front">
+                    <img src="product.jpg" alt="منتج 1">
+                </div>
+                <div class="product-back">
+                    <h3>منتج 1</h3>
+                    <p>وصف المنتج هنا. منتج عالي الجودة بسعر رائع!</p>
+                </div>
             </div>
             <div class="product-info">
                 <span class="price-box">💰 50 ج</span>
-                <button onclick="addToCart('منتج 1', 50, 10)">🛒 أضف</button>
+                <button onclick="event.stopPropagation(); addToCart('منتج 1', 50)">🛒 أضف إلى العربة</button>
                 <span class="price-box">🚚 10 ج</span>
             </div>
         </div>
 
-        <div class="product-card">
-            <div class="product-front">
-                <img src="product2.jpg" alt="منتج 2">
+        <div class="product-card" onclick="flipImage(this)">
+            <div class="product-inner">
+                <div class="product-front">
+                    <img src="product2.jpg" alt="منتج 2">
+                </div>
+                <div class="product-back">
+                    <h3>منتج 2</h3>
+                    <p>وصف المنتج هنا. خيار رائع للاستخدام اليومي!</p>
+                </div>
             </div>
             <div class="product-info">
                 <span class="price-box">💰 30 ج</span>
-                <button onclick="addToCart('منتج 2', 30, 10)">🛒 أضف</button>
+                <button onclick="event.stopPropagation(); addToCart('منتج 2', 30)">🛒 أضف إلى العربة</button>
                 <span class="price-box">🚚 10 ج</span>
             </div>
         </div>
@@ -104,7 +188,6 @@
     <div class="cart" id="cart">
         <h2>عربة التسوق</h2>
         <div id="cart-items"></div>
-        <p>الإجمالي: <span id="total-price">0</span> ج</p>
         <button onclick="checkout()">إتمام الشراء</button>
         <button onclick="toggleCart()">إغلاق</button>
     </div>
@@ -112,58 +195,21 @@
     <script>
         let cart = [];
 
-        function addToCart(name, price, delivery) {
-            let existingItem = cart.find(item => item.name === name);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ name, price, delivery, quantity: 1 });
-            }
+        function addToCart(name, price) {
+            cart.push({ name, price });
             updateCart();
         }
 
         function updateCart() {
             let cartItems = document.getElementById("cart-items");
-            let totalPrice = 0;
-            let totalDelivery = 0;
             cartItems.innerHTML = "";
-
             cart.forEach((item, index) => {
-                let itemTotal = item.price * item.quantity;
-                let deliveryTotal = item.delivery * item.quantity;
-                totalPrice += itemTotal;
-                totalDelivery += deliveryTotal;
-
-                cartItems.innerHTML += `
-                    <p>${item.name} - ${item.price} ج x 
-                        <button onclick="decreaseQuantity(${index})">➖</button> 
-                        ${item.quantity} 
-                        <button onclick="increaseQuantity(${index})">➕</button> 
-                        <button onclick="removeFromCart(${index})">❌</button>
-                    </p>
-                `;
+                cartItems.innerHTML += `<p>${item.name} - ${item.price} ج <button onclick="removeFromCart(${index})">❌</button></p>`;
             });
-
-            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
-            document.getElementById("total-price").innerText = totalPrice + totalDelivery;
         }
 
         function removeFromCart(index) {
             cart.splice(index, 1);
-            updateCart();
-        }
-
-        function increaseQuantity(index) {
-            cart[index].quantity++;
-            updateCart();
-        }
-
-        function decreaseQuantity(index) {
-            if (cart[index].quantity > 1) {
-                cart[index].quantity--;
-            } else {
-                cart.splice(index, 1);
-            }
             updateCart();
         }
 
@@ -173,24 +219,13 @@
 
         function checkout() {
             let message = "طلب جديد:\n";
-            let totalPrice = 0;
-            let totalDelivery = 0;
-
-            cart.forEach(item => {
-                let itemTotal = item.price * item.quantity;
-                let deliveryTotal = item.delivery * item.quantity;
-                totalPrice += itemTotal;
-                totalDelivery += deliveryTotal;
-
-                message += `- ${item.name}: ${item.quantity} × ${item.price} ج = ${itemTotal} ج\n`;
-            });
-
-            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
-            message += `إجمالي التوصيل: ${totalDelivery} ج\n`;
-            message += `الإجمالي الكلي: ${totalPrice + totalDelivery} ج\n`;
-            message += "الرجاء إرسال الاسم والعنوان لإتمام الطلب.";
-
+            cart.forEach(item => message += `- ${item.name}: ${item.price} ج\n`);
+            message += "\nالرجاء إرسال الاسم والعنوان لإتمام الطلب.";
             window.open(`https://wa.me/201066582483?text=${encodeURIComponent(message)}`);
+        }
+
+        function flipImage(card) {
+            card.classList.toggle("flipped");
         }
     </script>
 
