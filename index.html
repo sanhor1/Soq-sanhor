@@ -19,6 +19,93 @@
             margin: 10px auto;
             display: block;
         }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding-bottom: 50px;
+        }
+        .product-card { 
+            width: 90%;
+            max-width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: black;
+            perspective: 1000px;
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+        .product-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .product-card.flipped .product-inner {
+            transform: rotateY(180deg);
+        }
+        .product-front, .product-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .product-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .product-back {
+            background: #007bff;
+            color: white;
+            transform: rotateY(180deg);
+            flex-direction: column;
+        }
+        .product-info { 
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 10px; 
+            background: white;
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .price-box {
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .cart { 
+            position: fixed; 
+            top: 0; 
+            right: -100%; 
+            width: 300px; 
+            height: 100vh; 
+            background: linear-gradient(to bottom, #FF4500, #FFC300); 
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1); 
+            padding: 20px; 
+            transition: 0.3s;
+            color: white;
+        }
+        .cart.open { right: 0; }
         .cart-button {
             position: fixed;
             top: 10px;
@@ -32,6 +119,9 @@
             cursor: pointer;
             z-index: 9999;
         }
+        .cart-button:hover {
+            background: #0056b3;
+        }
         button { 
             padding: 8px 12px; 
             border: none; 
@@ -42,6 +132,9 @@
             transition: 0.3s;
             font-size: 14px;
         }
+        button:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -49,33 +142,105 @@
     <img src="logo.png" alt="شعار سوق سنهور المدينة" class="logo">
     <h1>مرحبًا بك في سوق سنهور المدينة</h1>
 
-    <button class="cart-button" onclick="checkout()">🛒 إتمام الشراء</button>
+    <button class="cart-button" onclick="toggleCart()">🛒</button>
+
+    <div class="container" id="product-container"></div>
+
+    <div class="cart" id="cart">
+        <h2>عربة التسوق</h2>
+        <div id="cart-items"></div>
+        <div id="cart-total">إجمالي السعر: 0 ج</div>
+        <button onclick="checkout()">إتمام الشراء</button>
+        <button onclick="toggleCart()">إغلاق</button>
+    </div>
 
     <script>
-        let cart = [
-            { name: "منتج 1", price: 50, delivery: 10, quantity: 1 },
-            { name: "منتج 2", price: 70, delivery: 15, quantity: 1 }
-        ];
+        let cart = [];
 
-        function checkout() {
-            let totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            let totalDelivery = cart.reduce((sum, item) => sum + item.delivery * item.quantity, 0);
-            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
+        async function loadProducts() {
+            let response = await fetch("products.json");
+            let products = await response.json();
+            let container = document.getElementById("product-container");
 
-            let cartDetails = cart.map(item => `- ${item.name}: ${item.price} ج x ${item.quantity} + توصيل: ${item.delivery} ج`).join("\n");
+            products.forEach(product => {
+                let productCard = document.createElement("div");
+                productCard.className = "product-card";
+                productCard.onclick = () => flipImage(productCard);
 
-            let message = `طلب جديد:\n${cartDetails}\n\nإجمالي السعر الكلي: ${totalAmount + totalDelivery} ج\n\nالرجاء إرسال الاسم والعنوان لإتمام الطلب.`;
+                productCard.innerHTML = `
+                    <div class="product-inner">
+                        <div class="product-front">
+                            <img src="${product.image}" alt="${product.name}">
+                        </div>
+                        <div class="product-back">
+                            <h3>${product.name}</h3>
+                            <p>${product.description}</p>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <span class="price-box">💰 ${product.price} ج</span>
+                        <button onclick="event.stopPropagation(); addToCart('${product.name}', ${product.price}, ${product.delivery})">🛒 أضف إلى العربة</button>
+                        <span class="price-box">🚚 ${product.delivery} ج</span>
+                    </div>
+                `;
 
-            let phoneNumbers = [
-                '201066582483',
-                '301066582484' // أضف أو عدل الأرقام هنا
-            ];
-
-            phoneNumbers.forEach(phoneNumber => {
-                let whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-                window.open(whatsappLink, '_blank');
+                container.appendChild(productCard);
             });
         }
+
+        function addToCart(name, price, delivery) {
+            let existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ name, price, delivery, quantity: 1 });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            let cartItems = document.getElementById("cart-items");
+            let cartTotal = document.getElementById("cart-total");
+            cartItems.innerHTML = "";
+            let totalPrice = 0, totalDelivery = 0;
+
+            cart.forEach((item, index) => {
+                totalPrice += item.price * item.quantity;
+                totalDelivery += item.delivery * item.quantity;
+                cartItems.innerHTML += `
+                    <div>
+                        <span>${item.name} - ${item.price} ج × ${item.quantity} + توصيل: ${item.delivery} ج</span>
+                        <button onclick="removeFromCart(${index})">❌</button>
+                    </div>
+                `;
+            });
+
+            totalDelivery = Math.max(10, totalDelivery);
+            cartTotal.innerHTML = `إجمالي السعر: ${totalPrice + totalDelivery} ج`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        function toggleCart() {
+            document.getElementById("cart").classList.toggle("open");
+        }
+
+        function checkout() {
+            let message = "طلب جديد:\n";
+            cart.forEach(item => message += `- ${item.name}: ${item.price} ج × ${item.quantity}\n`);
+            message += `إجمالي السعر: ${document.getElementById("cart-total").innerText.split(": ")[1]}`;
+            window.open(`https://wa.me/201066582483?text=${encodeURIComponent(message)}`);
+        }
+
+        function flipImage(card) {
+            card.classList.toggle("flipped");
+        }
+
+        window.onload = loadProducts;
     </script>
+
 </body>
 </html>
