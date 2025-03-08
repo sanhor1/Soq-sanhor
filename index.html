@@ -33,62 +33,17 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             color: black;
-            perspective: 1000px;
             position: relative;
-            height: 400px;
             overflow: hidden;
-        }
-        .product-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-        }
-        .product-card.flipped .product-inner {
-            transform: rotateY(180deg);
-        }
-        .product-front, .product-back {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            backface-visibility: hidden;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
         }
         .product-front img {
             width: 100%;
-            height: 100%;
+            height: 250px;
             object-fit: cover;
             border-radius: 10px;
         }
-        .product-back {
-            background: #007bff;
-            color: white;
-            transform: rotateY(180deg);
-            flex-direction: column;
-        }
         .product-info { 
-            display: flex; 
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
             padding: 10px; 
-            background: white;
-            border-radius: 0 0 10px 10px;
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-        }
-        .product-info .price-box, 
-        .product-info button {
-            flex: 1;
             text-align: center;
         }
         .price-box {
@@ -97,6 +52,8 @@
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 14px;
+            display: inline-block;
+            margin: 5px;
         }
         .cart { 
             position: fixed; 
@@ -124,9 +81,6 @@
             cursor: pointer;
             z-index: 9999;
         }
-        .cart-button:hover {
-            background: #0056b3;
-        }
         button { 
             padding: 8px 12px; 
             border: none; 
@@ -134,24 +88,9 @@
             color: white; 
             border-radius: 5px; 
             cursor: pointer;
-            transition: 0.3s;
             font-size: 14px;
         }
-        button:hover {
-            background: #0056b3;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .quantity-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 5px;
-        }
+        button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -161,40 +100,8 @@
 
     <button class="cart-button" onclick="toggleCart()">🛒</button>
 
-    <div class="container">
-        <div class="product-card" onclick="flipImage(this)">
-            <div class="product-inner">
-                <div class="product-front">
-                    <img src="product.jpg" alt="منتج 1">
-                </div>
-                <div class="product-back">
-                    <h3>منتج 1</h3>
-                    <p>وصف المنتج هنا. منتج عالي الجودة بسعر رائع!</p>
-                </div>
-            </div>
-            <div class="product-info">
-                <span class="price-box">💰 50 ج</span>
-                <button onclick="event.stopPropagation(); addToCart('منتج 1', 50, 2)">🛒 أضف إلى العربة</button>
-                <span class="price-box">🚚 2 ج</span>
-            </div>
-        </div>
-
-        <div class="product-card" onclick="flipImage(this)">
-            <div class="product-inner">
-                <div class="product-front">
-                    <img src="product2.jpg" alt="منتج 2">
-                </div>
-                <div class="product-back">
-                    <h3>منتج 2</h3>
-                    <p>وصف المنتج هنا. خيار رائع للاستخدام اليومي!</p>
-                </div>
-            </div>
-            <div class="product-info">
-                <span class="price-box">💰 30 ج</span>
-                <button onclick="event.stopPropagation(); addToCart('منتج 2', 30, 3)">🛒 أضف إلى العربة</button>
-                <span class="price-box">🚚 3 ج</span>
-            </div>
-        </div>
+    <div class="container" id="products-container">
+        <!-- سيتم تحميل المنتجات هنا تلقائيًا -->
     </div>
 
     <div class="cart" id="cart">
@@ -208,12 +115,41 @@
     <script>
         let cart = [];
 
+        async function loadProducts() {
+            try {
+                const response = await fetch("products.json");
+                const products = await response.json();
+                let container = document.getElementById("products-container");
+                container.innerHTML = "";
+
+                products.forEach(product => {
+                    let productCard = `
+                        <div class="product-card">
+                            <div class="product-front">
+                                <img src="${product.image}" alt="${product.name}">
+                            </div>
+                            <div class="product-info">
+                                <h3>${product.name}</h3>
+                                <p>${product.description}</p>
+                                <span class="price-box">💰 ${product.price} ج</span>
+                                <button onclick="addToCart('${product.name}', ${product.price}, ${product.delivery})">🛒 أضف إلى العربة</button>
+                                <span class="price-box">🚚 ${product.delivery} ج</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += productCard;
+                });
+            } catch (error) {
+                console.error("خطأ في تحميل المنتجات:", error);
+            }
+        }
+
         function addToCart(name, price, delivery) {
             let existingItem = cart.find(item => item.name === name);
             if (existingItem) {
-                existingItem.quantity += 1; // زيادة العدد إذا كان المنتج موجود
+                existingItem.quantity += 1;
             } else {
-                cart.push({ name, price, delivery, quantity: 1 }); // إضافة المنتج مع الكمية الأولى
+                cart.push({ name, price, delivery, quantity: 1 });
             }
             updateCart();
         }
@@ -224,23 +160,17 @@
             cartItems.innerHTML = "";
             let totalPrice = 0;
             let totalDelivery = 0;
+
             cart.forEach((item, index) => {
                 totalPrice += item.price * item.quantity;
                 totalDelivery += item.delivery * item.quantity;
                 cartItems.innerHTML += `
-                    <div class="cart-item">
-                        <span>${item.name} / ${item.price} ج / ${item.delivery} ج</span>
-                        <div class="quantity-controls">
-                            <button onclick="increaseQuantity(${index})">➕</button>
-                            <span>العدد: ${item.quantity}</span>
-                            <button onclick="decreaseQuantity(${index})">➖</button>
-                        </div>
-                        <button onclick="removeFromCart(${index})">❌</button>
-                    </div>
+                    <div>${item.name} - ${item.price} ج x ${item.quantity} + 🚚 ${item.delivery} ج</div>
+                    <button onclick="removeFromCart(${index})">❌</button>
                 `;
             });
 
-            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery; // إذا كان التوصيل أقل من 10 جـ نحسبه 10 جـ
+            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
             cartTotal.innerHTML = `إجمالي السعر: ${totalPrice + totalDelivery} ج`;
         }
 
@@ -249,43 +179,20 @@
             updateCart();
         }
 
-        function increaseQuantity(index) {
-            cart[index].quantity += 1;
-            updateCart();
-        }
-
-        function decreaseQuantity(index) {
-            if (cart[index].quantity > 1) {
-                cart[index].quantity -= 1;
-                updateCart();
-            }
-        }
-
         function toggleCart() {
             document.getElementById("cart").classList.toggle("open");
         }
 
         function checkout() {
-            let totalPrice = 0;
-            let totalDelivery = 0;
-            cart.forEach(item => {
-                totalPrice += item.price * item.quantity;
-                totalDelivery += item.delivery * item.quantity;
-            });
-
-            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery; // إذا كان التوصيل أقل من 10 جـ نحسبه 10 جـ
-            let totalAmount = totalPrice + totalDelivery;
-
             let message = "طلب جديد:\n";
-            cart.forEach(item => message += `- ${item.name}: ${item.price} ج x ${item.quantity} + توصيل: ${item.delivery} ج\n`);
-            message += `\nإجمالي السعر الكلي: ${totalAmount} ج\nالرجاء إرسال الاسم والعنوان لإتمام الطلب.`;
-
+            cart.forEach(item => {
+                message += `- ${item.name}: ${item.price} ج x ${item.quantity} + 🚚 ${item.delivery} ج\n`;
+            });
+            message += `\nإجمالي السعر: ${document.getElementById("cart-total").innerText.replace('إجمالي السعر: ', '')}`;
             window.open(`https://wa.me/201066582483?text=${encodeURIComponent(message)}`);
         }
 
-        function flipImage(card) {
-            card.classList.toggle("flipped");
-        }
+        document.addEventListener("DOMContentLoaded", loadProducts);
     </script>
 
 </body>
