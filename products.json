@@ -2,22 +2,22 @@
   {
     "name": "منتج 1",
     "price": 50,
-    "delivery": 10,
+    "delivery": 2,
     "description": "وصف المنتج الأول",
-    "image": "product1.jpg"
+    "image": "images/product1.jpg"
   },
   {
     "name": "منتج 2",
-    "price": 70,
-    "delivery": 15,
+    "price": 30,
+    "delivery": 3,
     "description": "وصف المنتج الثاني",
-    "image": "product2.jpg"
+    "image": "images/product2.jpg"
   },
-    {
+  {
     "name": "منتج 3",
-    "price": 70,
-    "delivery": 15,
-    "description": "وصف المنتج الثاني",
-    "image": "product3.jpg"
+    "price": 40,
+    "delivery": 4,
+    "description": "وصف المنتج الثالث",
+    "image": "images/product3.jpg"
   }
 ]
