@@ -278,17 +278,29 @@
             let totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
             let totalDelivery = cart.reduce((sum, item) => sum + item.delivery * item.quantity, 0);
             totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
-            alert(`إجمالي السعر: ${totalAmount + totalDelivery} ج`);
+
+            let cartDetails = cart.map(item => `${item.name} - ${item.quantity} x ${item.price} ج`).join('%0A');
+            let message = `طلب جديد:%0A${cartDetails}%0Aإجمالي السعر: ${totalAmount + totalDelivery} ج%0A`;
+
+            // الأرقام التي سترسل إليها الرسالة (استبدل الأرقام بأرقامك الخاصة)
+            let phoneNumbers = [
+                '201066582483',
+                '201066582483'
+            ];
+
+            // إنشاء رابط لكل رقم
+            phoneNumbers.forEach(phoneNumber => {
+                let whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+                // فتح الرابط
+                window.open(whatsappLink, '_blank');
+            });
         }
 
         function showNotification() {
-            const notification = document.getElementById('notification');
+            let notification = document.getElementById('notification');
             notification.style.display = 'block';
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 2000);
+            setTimeout(() => notification.style.display = 'none', 3000);
         }
     </script>
-
 </body>
 </html>
