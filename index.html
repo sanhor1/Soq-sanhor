@@ -275,4 +275,20 @@
         }
 
         function checkout() {
-            let total
+            let totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            let totalDelivery = cart.reduce((sum, item) => sum + item.delivery * item.quantity, 0);
+            totalDelivery = totalDelivery < 10 ? 10 : totalDelivery;
+            alert(`إجمالي السعر: ${totalAmount + totalDelivery} ج`);
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>
