@@ -1,23 +1,30 @@
 [
-  {
-    "name": "منتج 1",
-    "price": 50,
-    "delivery": 2,
-    "description": "وصف المنتج الأول",
-    "image": "images/product1.jpg"
-  },
-  {
-    "name": "منتج 2",
-    "price": 30,
-    "delivery": 3,
-    "description": "وصف المنتج الثاني",
-    "image": "images/product2.jpg"
-  },
-  {
-    "name": "منتج 3",
-    "price": 40,
-    "delivery": 4,
-    "description": "وصف المنتج الثالث",
-    "image": "images/product3.jpg"
-  }
+    {
+        "name": "منتج 1",
+        "description": "وصف المنتج هنا. منتج عالي الجودة بسعر رائع!",
+        "price": 50,
+        "delivery": 2,
+        "image": "images/product1.jpg"
+    },
+    {
+        "name": "منتج 2",
+        "description": "وصف المنتج هنا. خيار رائع للاستخدام اليومي!",
+        "price": 30,
+        "delivery": 3,
+        "image": "images/product2.jpg"
+    },
+    {
+        "name": "منتج 3",
+        "description": "وصف المنتج هنا. منتج ممتاز بسعر مغري!",
+        "price": 40,
+        "delivery": 2.5,
+        "image": "images/product3.jpg"
+    },
+    {
+        "name": "منتج 4",
+        "description": "وصف المنتج هنا. منتج لا غنى عنه في كل منزل.",
+        "price": 60,
+        "delivery": 5,
+        "image": "images/product4.jpg"
+    }
 ]
